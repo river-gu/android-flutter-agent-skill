@@ -58,6 +58,20 @@ SECURITY_RULES = [
         "severity": "LOW",
         "pattern": re.compile(r'[a-zA-Z0-9_\)]![\.\(]'),
         "recommendation": "Avoid force-unwrapping (!); use safe calls (?.) or pattern matching."
+    },
+    {
+        "id": "QUALITY-004",
+        "name": "Non-Lifecycle-Aware Flow Collection in Compose",
+        "severity": "MEDIUM",
+        "pattern": re.compile(r'\.collectAsState\(\s*\)'),
+        "recommendation": "Use collectAsStateWithLifecycle() to stop Flow collection when app is in the background."
+    },
+    {
+        "id": "QUALITY-005",
+        "name": "Hardcoded Color Literal in UI Code",
+        "severity": "LOW",
+        "pattern": re.compile(r'Color\s*\(\s*0x[0-9a-fA-F]{6,8}\s*\)'),
+        "recommendation": "Use MaterialTheme.colorScheme or colorResource() to support dynamic theming."
     }
 ]
 

@@ -37,6 +37,24 @@ class TaskListScreenTest {
     }
 
     @Test
+    fun taskListScreen_displaysEmptyMessage_whenStateIsEmpty() {
+        val fakeStateFlow = MutableStateFlow<TaskUiState>(TaskUiState.Empty)
+        val mockViewModel = mockk<TaskViewModel>(relaxed = true) {
+            every { uiState } returns fakeStateFlow
+        }
+
+        composeTestRule.setContent {
+            TaskListScreen(
+                viewModel = mockViewModel,
+                onNavigateToDetail = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("No tasks available. Tap to create one!")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun taskListScreen_displaysTasks_whenStateIsSuccess() {
         val tasks = listOf(
             Task(id = "1", title = "Write Unit Tests", isCompleted = false)

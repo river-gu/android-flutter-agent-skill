@@ -11,6 +11,7 @@ import javax.inject.Inject
 
 sealed interface TaskUiState {
     data object Loading : TaskUiState
+    data object Empty : TaskUiState
     data class Success(val tasks: List<Task>) : TaskUiState
     data class Error(val message: String) : TaskUiState
 }
@@ -31,8 +32,16 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = TaskUiState.Loading
             repository.getTasks()
-                .catch { e -> _uiState.value = TaskUiState.Error(e.localizedMessage ?: "Failed to load tasks") }
-                .collect { tasks -> _uiState.value = TaskUiState.Success(tasks) }
+                .catch { e -> 
+                    _uiState.value = TaskUiState.Error(e.localizedMessage ?: "Failed to load tasks") 
+                }
+                .collect { tasks -> 
+                    _uiState.value = if (tasks.isEmpty()) {
+                        TaskUiState.Empty
+                    } else {
+                        TaskUiState.Success(tasks)
+                    }
+                }
         }
     }
 

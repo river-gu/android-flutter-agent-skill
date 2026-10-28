@@ -12,6 +12,36 @@ This skill transforms the agent into a senior mobile architect and full-cycle de
 
 ---
 
+## 🛡️ 核心操作守则与防御准则 (Vibe Coding Defense)
+
+为了杜绝大模型在移动端代码生成中的“过度重构、破坏性修改、私自引库”等通病，执行任何任务必须严格遵循以下防御准则：
+
+### 1. 先规划，后编码 (Plan First, Code Later)
+- 涉及跨多个组件、数据流调整或修改超过 **2 个文件**时，必须先在回复前列出 **3-4 行核心执行步骤**。
+- 未经用户明确确认，**严禁一次性大范围重构**多个包路径下的代码。
+
+### 2. 极简手术式修改 (Surgical Edits Only)
+- 仅修改与当前目标功能严格关联的文件与代码行。
+- **严禁随意格式化或更改未涉修改项**的变量命名、代码风格或既有业务注解。
+
+### 3. 单一可信数据源 (Single Source of Truth, UDF)
+- UI 状态由 ViewModel 或 BLoC 统一管理并驱动，对外仅暴露不可变的只读状态流（如 `StateFlow<UiState>`）。
+- UI 组件（Composable / Widget）严禁在内部维护无状态托管的独立业务逻辑。
+
+---
+
+## 🚫 严格禁止项 (Negative Constraints)
+
+在生成和修改代码时，以下行为被绝对禁止：
+
+1. ❌ **严禁私自引入未经批准的第三方依赖**：不得随意修改 `build.gradle.kts` 或 `pubspec.yaml` 添加外部库。
+2. ❌ **严禁在 UI 作用域内随意开启裸协程**：Compose 中必须使用 `LaunchedEffect` 或绑定稳定 Key 的 `rememberCoroutineScope`；严禁使用 `GlobalScope`。
+3. ❌ **严禁忽略生命周期收集 Flow**：UI 层收集 Flow 时必须使用 `collectAsStateWithLifecycle()`，禁止使用普通 `collectAsState()` 造成后台持续耗能。
+4. ❌ **严禁静默吃掉异常**：禁止写出空的 `catch (e: Exception) {}`，必须通过明确的 UI 错误状态或单次事件（Single Event）向上反馈。
+5. ❌ **严禁硬编码资源**：界面文案走 `stringResource()` / `l10n`，颜色走主题 Token 或 `colorResource()`，严禁在 UI 中写死字符串与十六进制色值。
+
+---
+
 ## 🎯 When to Use This Skill
 
 Activate this skill when:
@@ -69,9 +99,11 @@ Follow this structured workflow for every mobile development or auditing task:
 ### Stage 3: Action (规范化代码生成与装配)
 
 When generating code, adhere strictly to the platform standards:
-- **Android Guidelines**: Follow [Android Compose Best Practices](./references/android-guidelines.md).
-  - Use `rememberSaveable`, `StateFlow`, `collectAsStateWithLifecycle()`, and `@Stable`/`@Immutable`.
-  - Decouple business logic into `ViewModel` or `UseCase`; never expose mutable state directly.
+- **Android Compose Guidelines**: Follow [Android Compose Best Practices](./references/android-guidelines.md).
+  - **Modifier 规范**：所有公开 Composable 函数第一个可选参数必须为 `modifier: Modifier = Modifier`，并在根布局节点消费。
+  - **四态完备覆盖**：异步及列表页面必须显式提供 `Loading`、`Success`、`Empty`（无数据）、`Error` 四种状态分支。
+  - **状态提升与分层**：严格拆分为容器型 Composable（负责挂载 ViewModel/状态流）与展示型 Composable（纯接收 State 与 Lambda 回调）。
+  - **性能与生命周期**：使用 `rememberSaveable`、`collectAsStateWithLifecycle()` 与 `@Stable`/`@Immutable` 避免冗余重组。
 - **Flutter Guidelines**: Follow [Flutter Development Best Practices](./references/flutter-guidelines.md).
   - Use `const` constructors everywhere applicable.
   - Implement separation of UI and business logic via `BlocBuilder`/`BlocListener` or `ConsumerWidget`.

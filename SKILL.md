@@ -34,11 +34,18 @@ This skill transforms the agent into a senior mobile architect and full-cycle de
 
 在生成和修改代码时，以下行为被绝对禁止：
 
+### 通用与 Android 约束
 1. ❌ **严禁私自引入未经批准的第三方依赖**：不得随意修改 `build.gradle.kts` 或 `pubspec.yaml` 添加外部库。
 2. ❌ **严禁在 UI 作用域内随意开启裸协程**：Compose 中必须使用 `LaunchedEffect` 或绑定稳定 Key 的 `rememberCoroutineScope`；严禁使用 `GlobalScope`。
 3. ❌ **严禁忽略生命周期收集 Flow**：UI 层收集 Flow 时必须使用 `collectAsStateWithLifecycle()`，禁止使用普通 `collectAsState()` 造成后台持续耗能。
 4. ❌ **严禁静默吃掉异常**：禁止写出空的 `catch (e: Exception) {}`，必须通过明确的 UI 错误状态或单次事件（Single Event）向上反馈。
-5. ❌ **严禁硬编码资源**：界面文案走 `stringResource()` / `l10n`，颜色走主题 Token 或 `colorResource()`，严禁在 UI 中写死字符串与十六进制色值。
+5. ❌ **严禁硬编码资源与尺寸**：界面文案走 `stringResource()` / `l10n`，颜色走主题 Token 或 `colorResource()`，严禁写死字符串与十六进制色值；禁止在可自适应布局上死写固定宽度。
+
+### Flutter 专项约束
+6. ❌ **严禁跨 `await` 异步缝隙裸用 `BuildContext`**：必须前置校验 `if (!context.mounted) return;` 避免页面退出后调用失效 context 崩溃。
+7. ❌ **严禁 Controller / Stream 资源未在 `dispose()` 中注销释放**，杜绝内存泄漏。
+8. ❌ **严禁在页面根节点滥用深层 `setState()`**，局部变动必须下沉或采用 `BlocSelector` / `Consumer` 进行精确重建。
+9. ❌ **严禁在 `build()` 方法中实例化状态管理对象**（如 `final bloc = TaskBloc()`）。
 
 ---
 
@@ -110,8 +117,10 @@ When generating code, adhere strictly to the platform standards:
 - **Pre-built Templates**:
   - Android MVVM Compose: [templates/android/mvvm_compose](./templates/android/mvvm_compose)
   - Android Clean MVI: [templates/android/clean_mvi](./templates/android/clean_mvi)
+  - Android Adaptive Layout: [templates/android/adaptive](./templates/android/adaptive)
   - Flutter BLoC Feature: [templates/flutter/bloc_feature](./templates/flutter/bloc_feature)
   - Flutter Riverpod Clean: [templates/flutter/riverpod_clean](./templates/flutter/riverpod_clean)
+  - Resilient Network & Auth: [templates/network](./templates/network)
   - Automated Tests: [templates/tests](./templates/tests) (Unit, UI, Maestro E2E)
 
 ---
@@ -127,6 +136,7 @@ When generating code, adhere strictly to the platform standards:
    - **CWE-798**: Hardcoded API keys, JWT tokens, private keys.
    - **Insecure Storage**: Plaintext SharedPreferences instead of EncryptedSharedPreferences / FlutterSecureStorage.
    - **Network Security**: Cleartext HTTP endpoints.
+   - **Async Gap Safety**: Unsafe `BuildContext` across `await` without `context.mounted`.
    - **State Leaks**: Coroutines launched without proper lifecycle scope, missing cancellation.
    - **Null Safety & Exceptions**: Raw empty catch blocks, unvalidated nullable casts.
 2. **Generate Automated Test Suite (Unit + UI + E2E)**:
@@ -163,9 +173,10 @@ The skill includes automated Python utilities located in `./scripts/`:
 - [AI Agent Ontology (本体论模型)](./references/ontology.md): Perception, Cognition, Action, and Memory definitions.
 - [Mobile Architecture Selection Guide](./references/architecture-selection.md): Detailed comparison of MVVM, MVI, MVP, Clean, and Feature-First.
 - [Automated Testing Guidelines (测试金字塔指南)](./references/testing-guidelines.md): Comprehensive guide for Unit, Compose/Widget UI, and Maestro E2E testing.
+- [Offline-First & Network Resilience (离线优先与网络弹性)](./references/offline-first-and-network.md): SSOT Database-first Flow, Token 401 Authenticator, NetworkResult sealed hierarchy.
+- [Adaptive & Responsive Layouts (折叠屏与大屏适配)](./references/adaptive-layouts.md): WindowWidthSizeClass, List-Detail pattern, LayoutBuilder constraints.
+- [Legacy Modernization Playbook (老项目改造与渐进迁移)](./references/legacy-migration-playbook.md): XML to ComposeView lifecycle traps, GetX to BLoC migration, Callback to Coroutine.
 - [Android Modern Development Guidelines](./references/android-guidelines.md): Compose, Coroutines, Flow, Hilt, Room.
 - [Flutter Modern Development Guidelines](./references/flutter-guidelines.md): Dart 3, BLoC, Riverpod, Dio, Secure Storage.
 - [Security & Quality Standards](./references/security-and-quality.md): Mobile OWASP, CWE mapping, and quality gates.
-- [Android Modern Development Guidelines](./references/android-guidelines.md): Compose, Coroutines, Flow, Hilt, Room.
-- [Flutter Modern Development Guidelines](./references/flutter-guidelines.md): Dart 3, BLoC, Riverpod, Dio, Secure Storage.
 - [Security & Quality Standards](./references/security-and-quality.md): Mobile OWASP, CWE mapping, and quality gates.

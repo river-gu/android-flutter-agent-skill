@@ -1,0 +1,33 @@
+name: Mobile Quality & Security Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  static-audit-and-verification:
+    name: Code Quality & Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Mobile Code Quality & Security Check
+        run: |
+          python3 scripts/code_quality_check.py .
+          if [ $? -ne 0 ]; then
+            echo "❌ Quality gate failed: High-severity security vulnerabilities or critical code smells found."
+            exit 1
+          fi
+
+      - name: Inspect Codebase Stack
+        run: |
+          python3 scripts/inspect_codebase.py .

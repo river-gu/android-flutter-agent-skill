@@ -72,6 +72,13 @@ SECURITY_RULES = [
         "severity": "LOW",
         "pattern": re.compile(r'Color\s*\(\s*0x[0-9a-fA-F]{6,8}\s*\)'),
         "recommendation": "Use MaterialTheme.colorScheme or colorResource() to support dynamic theming."
+    },
+    {
+        "id": "QUALITY-006",
+        "name": "Unsafe BuildContext Usage Across Async Gaps",
+        "severity": "HIGH",
+        "pattern": re.compile(r'(Navigator|ScaffoldMessenger)\.of\(context\)\.[a-zA-Z]+\(.*\)'),
+        "recommendation": "Always check 'if (!context.mounted) return;' before using BuildContext across async calls."
     }
 ]
 
@@ -91,6 +98,23 @@ def audit_file(file_path: Path):
             continue
 
         for rule in SECURITY_RULES:
+            # Special check for QUALITY-006: only trigger if in a file that has async/await
+            if rule["id"] == "QUALITY-006":
+                if "await " in content and rule["pattern"].search(line):
+                    # Check if previous lines have if (!context.mounted)
+                    prev_lines = "\n".join(lines[max(0, line_idx - 5):line_idx])
+                    if "mounted" not in prev_lines:
+                        issues.append({
+                            "file": str(file_path),
+                            "line": line_idx,
+                            "code": line.strip()[:100],
+                            "rule_id": rule["id"],
+                            "name": rule["name"],
+                            "severity": rule["severity"],
+                            "recommendation": rule["recommendation"]
+                        })
+                continue
+
             if rule["pattern"].search(line):
                 issues.append({
                     "file": str(file_path),
@@ -128,7 +152,7 @@ def main():
 
     if not issues:
         print("✅ No security vulnerabilities or critical code quality issues detected! Score: 100/100")
-        return
+        sys.exit(0)
 
     high_count = sum(1 for i in issues if i["severity"] == "HIGH")
     med_count = sum(1 for i in issues if i["severity"] == "MEDIUM")
@@ -144,6 +168,13 @@ def main():
         print(f"    File: {item['file']}:{item['line']}")
         print(f"    Code: {item['code']}")
         print(f"    Fix:  {item['recommendation']}\n")
+
+    # If critical security flaws exist, exit with code 1 for CI gate
+    if high_count > 0:
+        print("❌ CI Gate Blocked: High-severity issues must be fixed before merging.")
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":

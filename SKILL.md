@@ -80,10 +80,11 @@ When generating code, adhere strictly to the platform standards:
   - Android Clean MVI: [templates/android/clean_mvi](./templates/android/clean_mvi)
   - Flutter BLoC Feature: [templates/flutter/bloc_feature](./templates/flutter/bloc_feature)
   - Flutter Riverpod Clean: [templates/flutter/riverpod_clean](./templates/flutter/riverpod_clean)
+  - Automated Tests: [templates/tests](./templates/tests) (Unit, UI, Maestro E2E)
 
 ---
 
-### Stage 4: Reflection & Verification (质量检查、安全审计与测试)
+### Stage 4: Reflection & Verification (质量检查、安全审计与自动化测试)
 
 1. **Run Static Checks & Security Audit**:
    Execute the built-in audit script:
@@ -96,9 +97,19 @@ When generating code, adhere strictly to the platform standards:
    - **Network Security**: Cleartext HTTP endpoints.
    - **State Leaks**: Coroutines launched without proper lifecycle scope, missing cancellation.
    - **Null Safety & Exceptions**: Raw empty catch blocks, unvalidated nullable casts.
-2. **Generate Test Suite**:
-   - Unit tests for ViewModels, BLoCs, and UseCases using mock frameworks (MockK / mocktail).
-   - Widget & UI tests (Compose `createComposeRule()`, Flutter `testWidgets()`).
+2. **Generate Automated Test Suite (Unit + UI + E2E)**:
+   Consult [Testing Guidelines](./references/testing-guidelines.md) and execute:
+   ```bash
+   python scripts/generate_tests.py --platform <android|flutter> --name <FeatureName> --type all --output <test_dir>
+   ```
+   - **Unit Tests**:
+     - Android: MockK + Turbine + Coroutines Test for StateFlow in ViewModels & UseCases.
+     - Flutter: `bloc_test` + `mocktail` for BLoC/Cubit event-state verification.
+   - **Widget & Compose UI Tests**:
+     - Android: Compose `createComposeRule()`, semantics tree verification, state-driven rendering.
+     - Flutter: `testWidgets` with `WidgetTester.pumpAndSettle()`.
+   - **E2E Integration Flow**:
+     - Cross-platform Maestro declarative YAML flows (`maestro_flow.yaml`).
 
 ---
 
@@ -111,6 +122,7 @@ The skill includes automated Python utilities located in `./scripts/`:
 | [`inspect_codebase.py`](./scripts/inspect_codebase.py) | Scans Android/Flutter projects and prints tech stack, packages, architecture | `python scripts/inspect_codebase.py [path]` |
 | [`code_quality_check.py`](./scripts/code_quality_check.py) | Audits Kotlin/Dart code for security vulnerabilities and code smells | `python scripts/code_quality_check.py [path]` |
 | [`scaffold_module.py`](./scripts/scaffold_module.py) | Scaffolds standard feature module boilerplate for Android or Flutter | `python scripts/scaffold_module.py --platform <android\|flutter> --name <FeatureName> --arch <mvvm\|mvi\|bloc>` |
+| [`generate_tests.py`](./scripts/generate_tests.py) | Automatically generates Unit Tests, Compose/Widget UI Tests, and Maestro E2E scripts | `python scripts/generate_tests.py --platform <android\|flutter> --name <FeatureName> --type all` |
 
 ---
 
@@ -118,6 +130,10 @@ The skill includes automated Python utilities located in `./scripts/`:
 
 - [AI Agent Ontology (本体论模型)](./references/ontology.md): Perception, Cognition, Action, and Memory definitions.
 - [Mobile Architecture Selection Guide](./references/architecture-selection.md): Detailed comparison of MVVM, MVI, MVP, Clean, and Feature-First.
+- [Automated Testing Guidelines (测试金字塔指南)](./references/testing-guidelines.md): Comprehensive guide for Unit, Compose/Widget UI, and Maestro E2E testing.
+- [Android Modern Development Guidelines](./references/android-guidelines.md): Compose, Coroutines, Flow, Hilt, Room.
+- [Flutter Modern Development Guidelines](./references/flutter-guidelines.md): Dart 3, BLoC, Riverpod, Dio, Secure Storage.
+- [Security & Quality Standards](./references/security-and-quality.md): Mobile OWASP, CWE mapping, and quality gates.
 - [Android Modern Development Guidelines](./references/android-guidelines.md): Compose, Coroutines, Flow, Hilt, Room.
 - [Flutter Modern Development Guidelines](./references/flutter-guidelines.md): Dart 3, BLoC, Riverpod, Dio, Secure Storage.
 - [Security & Quality Standards](./references/security-and-quality.md): Mobile OWASP, CWE mapping, and quality gates.

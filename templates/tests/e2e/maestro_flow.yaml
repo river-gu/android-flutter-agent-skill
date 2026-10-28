@@ -1,0 +1,30 @@
+# Maestro Cross-Platform Automated E2E Test Flow
+# Applicable to both Native Android & Flutter applications
+
+appId: com.example.taskapp
+---
+# 1. 启动应用
+- launchApp
+
+# 2. 验证主界面 AppBar 是否正常加载
+- assertVisible: "Task Manager"
+
+# 3. 点击添加任务
+- tapOn: "Add Task"
+
+# 4. 模拟输入并确认
+- assertVisible: "Enter Task Title"
+- inputText: "Automated Regression Test Task"
+- tapOn: "Save"
+
+# 5. 验证新任务是否成功插入列表并在屏幕可见
+- assertVisible: "Automated Regression Test Task"
+
+# 6. 点击 Checkbox 完成任务
+- tapOn:
+    rightOf: "Automated Regression Test Task"
+    element:
+      role: "checkbox"
+
+# 7. 截图留档
+- takeScreenshot: regression_test_passed
